@@ -1,0 +1,21 @@
+@import '../../styles/variables.scss';
+
+.footer {
+  background-color: $md-grey;
+
+  &__container {
+    height: 100%;
+    padding: 1em;
+  }
+}
+
+.list {
+  min-height: 4em;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+  }
+}

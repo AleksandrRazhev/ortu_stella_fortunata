@@ -1,9 +1,12 @@
+@import '../../styles/variables.scss';
+
 .header {
   &__container {
     display: flex;
     align-items: center;
     padding-top: 2em;
     padding-bottom: 2em;
+    background-color: $grey-light;
   }
 
   &__title {
