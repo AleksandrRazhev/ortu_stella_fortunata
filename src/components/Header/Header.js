@@ -3,7 +3,7 @@ import Link from "next/link"
 import style from './Header.module.scss';
 
 export default function Header(props) {
-  const title = props.title ? props.title : 'Diabetes Helper';
+  const title = props.title ? props.title : 'Ortu Stella Fortunata';
 
   return (
     <header className={style.header}>
