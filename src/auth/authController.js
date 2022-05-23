@@ -2,7 +2,6 @@ import * as yup from 'yup';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs/dist/bcrypt';
 import { default as jwt } from 'jsonwebtoken';
-import { config } from 'dotenv'
 
 // import { User } from '../models/User';
 // import { Role } from '../models/Role';
@@ -21,6 +20,10 @@ const generateAccessToken = (id, roles) => {
 }
 
 export default function authController() {
+
+  const User = getUserModel();
+  const Role = getRoleModel();
+  const Article = getArticleModel();
 
   const message = (response, resStatus, text) => {
     console.log(text);
@@ -56,9 +59,6 @@ export default function authController() {
   const login = async (req, res) => {
     try {
       await connect();
-      await getUserModel();
-      console.log(User);
-      await getRoleModel();
 
       const { username, password } = req.body;
       const user = await User.findOne({ username });
@@ -98,17 +98,19 @@ export default function authController() {
 
       const { username, password, email } = req.body;
 
+
       await connect();
       const candidate = await User.findOne({ username });
-      const candidateEmail = await User.findOne({ email });
+      // const candidateEmail = await User.findOne({ email });
+
       if (candidate) {
         message(res, 400, 'The user already exists');
         return;
       }
-      if (candidateEmail) {
-        message(res, 400, 'The email already exists');
-        return;
-      }
+      // if (candidateEmail) {
+      //   message(res, 400, 'The email already exists');
+      //   return;
+      // }
       const hashPassword = bcrypt.hashSync(password, 7);
       const userRole = await Role.findOne({ value: 'user' });
       const user = new User({ username, password: hashPassword, email, roles: [userRole.value] });
@@ -125,9 +127,6 @@ export default function authController() {
   const addArticle = async (req, res) => {
     try {
       await connect();
-      await getUserModel();
-      await getRoleModel();
-      await getArticleModel();
 
       const { username, password, title, text, images } = req.body;
 

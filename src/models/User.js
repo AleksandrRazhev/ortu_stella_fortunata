@@ -11,22 +11,20 @@ const { Schema, model } = require('mongoose')
 
 // export { User };
 
-let User;
+let userModel;
 
 const getUserModel = () => {
-  if (User) {
-    console.log('the user exists')
-    return User;
-   }
+  console.log(userModel);
+  if (userModel) { return userModel };
+
   const userSchema = new Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     roles: [{ type: String, ref: 'Role' }]
   });
 
-  User = model('User', userSchema);
-
-  return User;
+  userModel = model('User', userSchema);
+  return userModel;
 }
 
 export { getUserModel };

@@ -8,17 +8,17 @@ const { Schema, model } = require('mongoose');
 
 // export { Role };
 
-let Role;
+let roleModel;
 
 const getRoleModel = () => {
-  if (Role) { return Role }
+  if (roleModel) { return roleModel }
   const roleSchema = new Schema({
     value: { type: String, unique: true, default: 'user' },
   });
 
-  Role = model('Role', roleSchema);
+  roleModel = model('Role', roleSchema);
 
-  return Role;
+  return roleModel;
 }
 
 export { getRoleModel };

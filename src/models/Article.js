@@ -11,11 +11,11 @@ import { Schema, model } from 'mongoose';
 
 // export { Article };
 
-let Article;
+let articleModel;
 
 const getArticleModel = () => {
 
-  if (Article) { return Article }
+  if (articleModel) { return articleModel }
   const articleSchema = new Schema({
     title: { type: String, unique: true, required: true },
     time: { type: Date, default: Date.now },
@@ -23,9 +23,9 @@ const getArticleModel = () => {
     images: [{ type: String }]
   });
 
-  Article = model('Article', articleSchema);
+  articleModel = model('Article', articleSchema);
 
-  return Article;
+  return articleModel;
 }
 
 export { getArticleModel };
