@@ -1,4 +1,5 @@
-import {Schema, model} from 'mongoose';
+const mongoose = require('mongoose')
+const { Schema, model } = mongoose
 
 const postSchema = new Schema({
   username: {type: String, ref: 'User', required: true},
@@ -6,6 +7,6 @@ const postSchema = new Schema({
   text: {type: String, required: true},
 });
 
-const Post = model('Post', postSchema);
+const PostModel = mongoose.models.Post || model('Post', postSchema);
 
-export { Post };
+export { PostModel };
