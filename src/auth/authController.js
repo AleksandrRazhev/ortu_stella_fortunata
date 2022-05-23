@@ -3,14 +3,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs/dist/bcrypt';
 import { default as jwt } from 'jsonwebtoken';
 
-// import { User } from '../models/User';
-// import { Role } from '../models/Role';
-// import { Article } from '../models/Article';
-import { getUserModel } from '../models/User';
-import { getRoleModel } from '../models/Role';
-import { getArticleModel } from '../models/Article';
+import { RoleModel } from '../models/Role';
+import { ArticleModel } from '../models/Article';
+import { UserModel } from '../models/User';
 
-// import { Post } from '../models/Post';
+// import { PostModel } from '../models/Post';
 
 import { secret } from '../../config';
 
@@ -20,14 +17,10 @@ const generateAccessToken = (id, roles) => {
 }
 
 export default function authController() {
-
-  const User = getUserModel();
-  const Role = getRoleModel();
-  const Article = getArticleModel();
-
   const message = (response, resStatus, text) => {
     console.log(text);
-    return response.status(resStatus).json({ message: text });
+    // TODO: figure out why response can be undefined
+    return response && response.status(resStatus).json({ message: text });
   }
 
   const connect = async () => {
@@ -61,7 +54,7 @@ export default function authController() {
       await connect();
 
       const { username, password } = req.body;
-      const user = await User.findOne({ username });
+      const user = await UserModel.findOne({ username });
       if (!user) {
         message(res, 400, 'User not found');
         return;
@@ -100,8 +93,8 @@ export default function authController() {
 
 
       await connect();
-      const candidate = await User.findOne({ username });
-      // const candidateEmail = await User.findOne({ email });
+      const candidate = await UserModel.findOne({ username });
+      // const candidateEmail = await UserModel.findOne({ email });
 
       if (candidate) {
         message(res, 400, 'The user already exists');
@@ -112,8 +105,8 @@ export default function authController() {
       //   return;
       // }
       const hashPassword = bcrypt.hashSync(password, 7);
-      const userRole = await Role.findOne({ value: 'user' });
-      const user = new User({ username, password: hashPassword, email, roles: [userRole.value] });
+      const userRole = await RoleModel.findOne({ value: 'user' });
+      const user = new UserModel({ username, password: hashPassword, email, roles: [userRole.value] });
       await user.save();
       message(res, 200, 'Registration successful');
       return;
@@ -130,7 +123,7 @@ export default function authController() {
 
       const { username, password, title, text, images } = req.body;
 
-      const user = await User.findOne({ username });
+      const user = await UserModel.findOne({ username });
       if (!user) {
         message(res, 400, 'User not found');
         return;
@@ -146,7 +139,7 @@ export default function authController() {
         return;
       }
 
-      const newArticle = new Article({ title, text, images });
+      const newArticle = new ArticleModel({ title, text, images });
       await newArticle.save();
       message(res, 400, 'Article added');
     } catch (e) {
