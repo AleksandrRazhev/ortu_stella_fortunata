@@ -1,5 +1,5 @@
 const db = require('./db.json');
-import authController from '../../auth/authController'
+import authController from '../../auth/authController';
 
 export default async function Http(req, res) {
   try {

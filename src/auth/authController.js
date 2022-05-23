@@ -1,15 +1,31 @@
-import { User } from '../models/User';
-import { Role } from '../models/Role';
-import { Post } from '../models/Post';
-import { Article } from '../models/Article';
+import * as yup from 'yup';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs/dist/bcrypt';
+import { default as jwt } from 'jsonwebtoken';
+import { config } from 'dotenv'
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const { Check, check, validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+// import { User } from '../models/User';
+// import { Role } from '../models/Role';
+// import { Article } from '../models/Article';
+import { getUserModel } from '../models/User';
+import { getRoleModel } from '../models/Role';
+import { getArticleModel } from '../models/Article';
+
+// import { Post } from '../models/Post';
+
+import { secret } from '../../config';
+
+const generateAccessToken = (id, roles) => {
+  const payload = { id, roles };
+  return jwt.sign(payload, secret, { expiresIn: '24h' });
+}
 
 export default function authController() {
+
+  const message = (response, resStatus, text) => {
+    console.log(text);
+    return response.status(resStatus).json({ message: text });
+  }
 
   const connect = async () => {
     try {
@@ -22,89 +38,121 @@ export default function authController() {
 
   const getArticles = async (req, res) => {
     try {
-      console.log('Статьи');
+      message(res, 200, 'Articles sent');
     } catch (e) {
-      console.log(e);
-      res.status(400).json({ message: 'Articles fetch error' });
+      message(res, 400, 'Articles not sent');
     };
   };
 
   const getUsers = async (req, res) => {
     try {
-      console.log('Список пользователей');
+      await connect();
+      message(res, 200, 'Users sent');
     } catch (e) {
-      console.log(e);
-      res.status(400).json({ message: 'Users fetch error' });
+      message(res, 400, 'Users not sent');
     };
   }
 
   const login = async (req, res) => {
     try {
       await connect();
-      const { password } = req.body;
-      if (password !== 'qwe') {
-        console.log('Password error');
-        return res.status(400).json({ message: 'Password error' });
+      await getUserModel();
+      console.log(User);
+      await getRoleModel();
+
+      const { username, password } = req.body;
+      const user = await User.findOne({ username });
+      if (!user) {
+        message(res, 400, 'User not found');
+        return;
       }
 
+      const validPassword = bcrypt.compareSync(password, user.password);
+      if (!validPassword) {
+        message(res, 400, 'Password is incorrect');
+        return;
+      }
+      const token = generateAccessToken(user._id, user.roles)
       console.log('Login successful');
-      return res.status(200).json({ message: 'Login successful' });
+      return res.json({ token });
     } catch (e) {
-      console.log('Function login error');
       console.log(e);
-      return res.status(400).json({ message: 'Function login error' });
+      message(res, 400, 'Function login error');
     };
   }
 
   const registration = async (req, res) => {
     try {
+
+      const validationSchema = yup.object().shape({
+        username: yup.string().required().min(2).max(50),
+        password: yup.string().required().min(2).max(50),
+        email: yup.string().required().email(),
+      })
+
+      const validation = await validationSchema.validate(req.body).catch(err => err.params.path);
+      if (validation !== req.body) {
+        message(res, 400, `Validation eror ${validation}`);
+        return;
+      };
+
+      const { username, password, email } = req.body;
+
       await connect();
-      const { username, password } = req.body;
       const candidate = await User.findOne({ username });
+      const candidateEmail = await User.findOne({ email });
       if (candidate) {
-        return res.status(400).json({ message: 'The user already exists' });
+        message(res, 400, 'The user already exists');
+        return;
+      }
+      if (candidateEmail) {
+        message(res, 400, 'The email already exists');
+        return;
       }
       const hashPassword = bcrypt.hashSync(password, 7);
       const userRole = await Role.findOne({ value: 'user' });
-      const user = new User({ username, password: hashPassword, roles: [userRole.value] });
+      const user = new User({ username, password: hashPassword, email, roles: [userRole.value] });
       await user.save();
-      console.log('Registration successful');
-      return res.status(200).json({ message: 'Registration successful' });
+      message(res, 200, 'Registration successful');
+      return;
     } catch (e) {
       console.log(e);
-      res.status(400).json({ message: 'Registration error' });
+      message(res, 400, 'Function registration error');
+      return;
     };
   }
 
   const addArticle = async (req, res) => {
     try {
       await connect();
+      await getUserModel();
+      await getRoleModel();
+      await getArticleModel();
+
       const { username, password, title, text, images } = req.body;
 
       const user = await User.findOne({ username });
       if (!user) {
-        console.log('User not found');
-        return res.status(400).json({ message: 'User not found' })
+        message(res, 400, 'User not found');
+        return;
       };
       const access = user.roles.find(item => item === 'admin');
       if (!access) {
-        console.log('No access');
-        return res.status(400).json({ message: 'No access' })
+        message(res, 400, 'No access');
+        return;
       };
       const validPassword = bcrypt.compareSync(password, user.password);
       if (!validPassword) {
-        console.log('Password is incorrect');
-        return res.status(400).json({ message: 'Password is incorrect' })
+        message(res, 400, 'Password is incorrect');
+        return;
       }
 
       const newArticle = new Article({ title, text, images });
       await newArticle.save();
-      console.log('Added article');
-      return res.status(200).json({ message: 'Added article' });
+      message(res, 400, 'Article added');
     } catch (e) {
-      console.log('Article not added');
       console.log(e);
-      res.status(400).json({ message: 'Article not added' });
+      message(res, 400, 'Article not added');
     }
   }
 

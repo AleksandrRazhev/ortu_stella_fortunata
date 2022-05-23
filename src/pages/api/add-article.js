@@ -1,4 +1,4 @@
-import authController from '../../auth/authController'
+import authController from "../../auth/authController";
 
 export default async function addArticleAPI(req, res) {
   try {
